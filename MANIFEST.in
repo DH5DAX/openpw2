@@ -1,4 +1,4 @@
-include LICENSE THIRD_PARTY.md CONTRIBUTING.md
+include LICENSE THIRD_PARTY.md CONTRIBUTING.md CHANGELOG.md
 recursive-include docs *.md *.png
 recursive-include licenses *.txt
 recursive-include tests *.py *.json

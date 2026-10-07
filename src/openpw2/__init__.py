@@ -3,7 +3,7 @@
 from .client import Client, ConnectionConfig
 from .errors import AuthenticationError, CommandBlocked, ConnectionLost, ProtocolError
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = [
     "Client",
     "ConnectionConfig",

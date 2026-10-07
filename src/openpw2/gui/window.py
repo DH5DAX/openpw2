@@ -6,7 +6,7 @@ import json
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
@@ -33,6 +33,7 @@ from openpw2.client import ConnectionConfig, block_reason
 
 from . import settings
 from .bridge import Bridge
+from .theme import set_tone, stylesheet
 
 
 def label(text="", name=None):
@@ -81,7 +82,7 @@ class Window(QMainWindow):
         self.setWindowTitle("openpw2 · IC-PW2 remote")
         self.resize(1080, 840)
         self.setMinimumSize(850, 650)
-        self.setStyleSheet(Path(__file__).with_name("theme.qss").read_text(encoding="utf-8"))
+        self.setStyleSheet(stylesheet())
         self.bridge = bridge or Bridge()
         self.state = {}
         self.received = 0.0
@@ -101,7 +102,7 @@ class Window(QMainWindow):
         header.addLayout(name)
         header.addStretch()
         self.connection_badge = label("DISCONNECTED", "status")
-        header.addWidget(self.connection_badge)
+        header.addWidget(self.connection_badge, 0, Qt.AlignmentFlag.AlignVCenter)
         self.demo_button = QPushButton("Try demo")
         self.demo_button.clicked.connect(self.start_demo)
         header.addWidget(self.demo_button)
@@ -166,8 +167,9 @@ class Window(QMainWindow):
         power_layout.addWidget(self.power_hint)
         hero.addWidget(power, 3)
         frequency, frequency_layout = card()
+        self.frequency_card = frequency
         row = QHBoxLayout()
-        self.mode_label = label("STANDBY / —", "eyebrow")
+        self.mode_label = label("—", "mode")
         row.addWidget(self.mode_label)
         row.addStretch()
         self.tx_label = label("—", "status")
@@ -233,7 +235,7 @@ class Window(QMainWindow):
         for level, text in (("500", "500 W"), ("1k", "1 kW")):
             route.addWidget(self._command_button(text, "level", {"id": level}))
         controls_layout.addLayout(route)
-        self.guard_label = label("", "muted")
+        self.guard_label = label("", "guard")
         controls_layout.addWidget(self.guard_label)
         layout.addWidget(controls)
         layout.addStretch()
@@ -243,6 +245,9 @@ class Window(QMainWindow):
     def _command_button(self, text, name, args):
         button = QPushButton(text)
         button.setCheckable(name != "tune")
+        button.setProperty("control", True)
+        if name == "operate":
+            button.setProperty("selectionTone", "ok" if args["value"] else "warn")
         button.setObjectName(f"command_{name}_{next(iter(args.values()), 'start')}")
         button.clicked.connect(lambda checked=False: self.send_command(name, args))
         self.buttons.append((button, name, args))
@@ -253,7 +258,7 @@ class Window(QMainWindow):
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 18, 0, 0)
         box, inner = card()
-        inner.addWidget(label("Connect to your IC-PW2", "meterValue"))
+        inner.addWidget(label("Connect to your IC-PW2", "sectionTitle"))
         hint = label(
             "Enable LAN remote access on the PW2. Use the user ID and password configured on the amplifier.",
             "muted",
@@ -419,12 +424,15 @@ class Window(QMainWindow):
         display = state.get("meter_display") if on else None
         bars = display.get("values", {}) if display and display.get("mode") == "bars" else {}
         self.po_bar.setValue(round(bars.get("po", {}).get("percent", 0) * 10))
+        self.po_bar.setEnabled("po" in bars)
         self.power_hint.setText(
             "Select bar view on the PW2 to receive all six meters"
             if on and display and display.get("mode") == "needles"
             else "≈ Display-derived watts · 0 … 1,500 W scale"
         )
-        mode = "OPERATE" if state.get("operate") else "STANDBY"
+        mode = (
+            "OPERATE" if state.get("operate") is True else "STANDBY" if state.get("operate") is False else "—"
+        )
         self.mode_label.setText(
             mode if on else "POWER OFF" if connected and state.get("power") == "off" else "—"
         )
@@ -503,6 +511,55 @@ class Window(QMainWindow):
             else "Command pending…"
             if self.busy
             else reason or "RX ready · switching enabled"
+        )
+
+        # HamRig amplifier semantics: green Operate, amber Standby / tuning,
+        # blue RX and a solid red TX badge. Labels always accompany colour.
+        set_tone(
+            self.connection_badge,
+            "warn"
+            if connected and self.is_demo
+            else "ok"
+            if connected
+            else "bad"
+            if state.get("error")
+            else "neutral",
+        )
+        set_tone(
+            self.mode_label,
+            "ok"
+            if on and state.get("operate") is True
+            else "warn"
+            if on and state.get("operate") is False
+            else "neutral",
+        )
+        set_tone(
+            self.tx_label,
+            "warn"
+            if on and state.get("tuning")
+            else "tx"
+            if on and state.get("tx") is True
+            else "info"
+            if on and state.get("tx") is False
+            else "neutral",
+        )
+        set_tone(
+            self.frequency_card,
+            "bad"
+            if on and state.get("protection_lamp")
+            else "tx"
+            if on and state.get("tx") is True
+            else "neutral",
+        )
+        set_tone(
+            self.guard_label,
+            "bad"
+            if on and state.get("protection_lamp")
+            else "warn"
+            if connected and (reason or self.busy)
+            else "ok"
+            if connected
+            else "neutral",
         )
 
     def export_snapshot(self):

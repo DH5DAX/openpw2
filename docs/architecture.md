@@ -21,6 +21,7 @@ gui/bridge.py ── dedicated asyncio thread
 | `demo.py` | Interactive local model, no sockets or imported hardware settings |
 | `gui/bridge.py` | Event-loop thread and signal boundary; orderly cancellation/shutdown |
 | `gui/window.py` | Confirmed-state dashboard, connection form and sanitized reference view |
+| `gui/theme.py`, `gui/theme.qss` | HamRig tokens, component styles and semantic status colours |
 | `gui/settings.py` | Atomic preference save; password explicitly excluded |
 
 No Qt types occur in the protocol layer. State uses plain dictionaries so it

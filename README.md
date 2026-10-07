@@ -6,7 +6,8 @@ readable reference implementation of its native **RS-PW2 LAN protocol**.
 ![openpw2 in hardware-free demo mode](docs/images/demo.png)
 
 **MIT licensed. No HamRig installation, vendor application or vendor DLL needed.**
-The client library depends only on `cryptography`; the optional GUI uses PySide6.
+The client library depends only on `cryptography`; the optional GUI uses PySide6
+and follows the [HamRig design system](docs/design.md).
 This is an independent interoperability project, not an Icom product.
 
 ## Start

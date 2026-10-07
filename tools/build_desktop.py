@@ -55,7 +55,7 @@ def main():
         check=True,
     )
     output = ROOT / "dist/openpw2"
-    for name in ("LICENSE", "THIRD_PARTY.md", "README.md", "CONTRIBUTING.md"):
+    for name in ("LICENSE", "THIRD_PARTY.md", "README.md", "CONTRIBUTING.md", "CHANGELOG.md"):
         shutil.copyfile(ROOT / name, output / name)
     shutil.copytree(ROOT / "docs", output / "docs", dirs_exist_ok=True)
     notices = output / "licenses"

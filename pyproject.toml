@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openpw2"
-version = "0.1.0"
+version = "0.1.1"
 description = "An independent IC-PW2 LAN client and desktop reference application"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,7 +23,7 @@ openpw2 = "openpw2.gui.app:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-"openpw2.gui" = ["*.qss"]
+"openpw2.gui" = ["*.qss", "*.svg"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
